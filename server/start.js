@@ -70,12 +70,12 @@ export const start = async () => {
           return (await Mangas.find({}).sort({ title: 1 }).toArray()).map(prepare)
         },
         chapters: async () => {
-          return (await Chapters.find({}).sort({ date: 1 }).toArray()).map(prepare)
+          return (await Chapters.find({}).limit(50).sort({ date: -1 }).toArray()).map(prepare)
         }
       },
       Manga: {
         chapters: async (parent) => {
-          return (await Chapters.find({ 'manga': parent._id }).sort({ date: 1 }).toArray()).map(prepare);
+          return (await Chapters.find({ 'manga': parent._id }).sort({ date: -1 }).toArray()).map(prepare);
         }
       },
       Chapter: {
