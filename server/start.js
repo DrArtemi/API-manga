@@ -30,7 +30,6 @@ const prepare = (o) => {
 
 export const start = async () => {
   try {
-    console.log(MONGO_URL);
     const db = await MongoClient.connect(MONGO_URL);
 
     const Mangas = db.collection('mangas');
@@ -40,7 +39,6 @@ export const start = async () => {
       type Query {
         mangas: [Manga]
         chapters: [Chapter]
-        mangaChapters(manga: String): [Chapter]
       }
 
       type Manga {
@@ -48,15 +46,17 @@ export const start = async () => {
         title: String
         description: String
         status: String
+        image_path: String
+        chapters: [Chapter]
       }
 
       type Chapter {
         _id: String
         chapter: String
         volume: String
-        manga: String
         link: String
         date: String
+        manga: Manga
       }
 
       schema {
@@ -67,15 +67,20 @@ export const start = async () => {
     const resolvers = {
       Query: {
         mangas: async () => {
-          return (await Mangas.find({}).toArray()).map(prepare)
+          return (await Mangas.find({}).sort({ title: 1 }).toArray()).map(prepare)
         },
         chapters: async () => {
-          return (await Chapters.find({}).toArray()).map(prepare)
-        },
-        mangaChapters: async (root, {manga}) => {
-          return (await Chapters.find({
-            "manga": manga
-          }).toArray()).map(prepare)
+          return (await Chapters.find({}).sort({ date: 1 }).toArray()).map(prepare)
+        }
+      },
+      Manga: {
+        chapters: async (parent) => {
+          return (await Chapters.find({ 'manga': parent._id }).sort({ date: 1 }).toArray()).map(prepare);
+        }
+      },
+      Chapter: {
+        manga: async (parent) => {
+          return await Mangas.findOne({ '_id': parent.manga });
         }
       }
     };
